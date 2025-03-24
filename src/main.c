@@ -43,7 +43,6 @@ int main(int argc, char *argv[]) {
 
     char *word = pick_random_word(word_list);
     Trie_t *word_list_trie = generate_trie(word_list);
-    bool match = search_trie(word_list_trie, "ghost");
     
     bool word_found;
     Wordle_t *wordle = run_wordle(word, word_list_trie, MAX_ATTEMPTS, &word_found);
