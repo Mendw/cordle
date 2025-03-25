@@ -10,12 +10,10 @@ void init_curses() {
 
 void handle_game_won(char *word, Wordle_t *wordle) {
     printw("Game won after %d attempts, word was %s\n", wordle->attempts_made, word);
-    refresh();
 }
 
 void handle_game_lost(char *word, Wordle_t *wordle) {
     printw("Game lost, word was %s\n", word);
-    refresh();
 }
 
 int main(int argc, char *argv[]) {
@@ -52,6 +50,7 @@ int main(int argc, char *argv[]) {
     
     if (word_found) handle_game_won (word, wordle);
     else            handle_game_lost(word, wordle);
+    refresh();
 
     printw("Press any key to exit");
     
