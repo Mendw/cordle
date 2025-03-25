@@ -1,8 +1,11 @@
-all: build run
+all: run clean
 
-build: src/main.c src/wordlist.c src/trie.c src/wordle.c
+build/wordle.out: src/main.c src/wordlist.c src/trie.c src/wordle.c
 	@mkdir -p build
 	gcc src/main.c src/wordlist.c src/trie.c src/wordle.c -o build/wordle.out -lncurses
 
-run:
+run: build/wordle.out
 	@./build/wordle.out words.txt
+
+clean:
+	@find build/ -name '*.out' -delete

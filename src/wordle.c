@@ -170,6 +170,7 @@ Wordle_t *run_wordle(char* word, Trie_t *word_list_trie, int max_attempts, bool*
     Wordle_t *wordle = init_wordle(max_attempts);
     char guess[WORDLE_SIZE + 1];
 
+    curs_set(1);
     while (wordle->attempts_made < wordle->max_attempts) {
         bool first_guess = true;
         bool already_guessed = false;
