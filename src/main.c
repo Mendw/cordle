@@ -87,19 +87,18 @@ void show_menu(WordList_t *word_list) {
         print_menu(selected);
         switch (getch()) {
             case KEY_UP:
-            case 'w':
-            case 'W':
+            case 'w': case 'W':
                 selected += n_options - 1;
                 selected %= n_options;
                 break;
             case KEY_DOWN:
-            case 's':
-            case 'S':
+            case 's': case 'S':
                 selected += 1;
                 selected %= n_options;
                 break;
             case '\n': case KEY_ENTER:
-            case KEY_RIGHT:
+            case KEY_RIGHT: 
+            case 'a': case 'A':
                 bool should_quit = select_menu_option(selected, word_list);
                 if (should_quit) return; 
                 
