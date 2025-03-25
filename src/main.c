@@ -25,11 +25,11 @@ void run_game(WordList_t *word_list) {
     Wordle_t *wordle = run_wordle(word, word_list_trie, MAX_ATTEMPTS, &word_found);
     
     erase();
+    printw("Game over -\n");
     show_wordle_state(wordle);
     
     if (word_found) handle_game_won (word, wordle);
     else            handle_game_lost(word, wordle);
-    refresh();
 
     printw("Press any key to continue");
     
@@ -43,37 +43,71 @@ void show_history() {
     refresh(); getch();
 }
 
-bool show_menu(WordList_t *word_list) {
+enum MenuOption { PLAY_GAME, GAME_HISTORY, QUIT_GAME };
+
+void print_menu(char selected) {
     erase();
-    curs_set(0);
-    noecho();
 
     printw("| --------------------- |\n");
     printw("|         MENU          |\n");
-    printw("| [1] Play game         |\n");
-    printw("| [2] Game history      |\n");
+    printw("| [%c] Play game         |\n", selected == PLAY_GAME ? '>' : ' ');
+    printw("| [%c] Game history      |\n", selected == GAME_HISTORY ? '>' : ' ');
     printw("|                       |\n");
-    printw("| [q] Quit              |\n");
+    printw("| [%c] Quit              |\n", selected == QUIT_GAME ? '>' : ' ');
     printw("| --------------------- |\n");
 
     refresh();
-    int option = getch();
-    switch (option)
-    {
-    case '1':
-        run_game(word_list);
-        break;
-    case '2':
-        show_history();
-        break;
-    case 'q':
-    case 'Q':
-        return true;
-    default:
-        break;
+}
+
+bool select_menu_option(char selected, WordList_t *word_list) {
+    switch (selected) {
+        case PLAY_GAME:
+            run_game(word_list);
+            break;
+        case GAME_HISTORY:
+            show_history();
+            break;
+        case QUIT_GAME:
+            return true;
+        default:
+            break;
     }
 
     return false;
+}
+
+void show_menu(WordList_t *word_list) {
+    curs_set(0);
+    noecho();
+    
+    char n_options = 3; 
+    char selected = PLAY_GAME;
+    
+    while (true) {
+        print_menu(selected);
+        switch (getch()) {
+            case KEY_UP:
+            case 'w':
+            case 'W':
+                selected += n_options - 1;
+                selected %= n_options;
+                break;
+            case KEY_DOWN:
+            case 's':
+            case 'S':
+                selected += 1;
+                selected %= n_options;
+                break;
+            case '\n': case KEY_ENTER:
+            case KEY_RIGHT:
+                bool should_quit = select_menu_option(selected, word_list);
+                if (should_quit) return; 
+                
+                break;
+            default:
+                break;
+        }
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -81,7 +115,6 @@ int main(int argc, char *argv[]) {
         printf("Invalid number of arguments\n");
         return 1;
     }
-
     
     FILE *file_ptr = fopen(argv[1], "r");
     if (file_ptr == NULL) {
@@ -95,13 +128,12 @@ int main(int argc, char *argv[]) {
         return 3;
     }
     
-    initscr();
-    init_curses();
     srand(time(NULL));
 
-    bool should_quit;
-    do should_quit = show_menu(word_list); 
-    while (should_quit == false);
+    initscr();
+    init_curses();
+
+    show_menu(word_list);
 
     endwin();
     return 0;
