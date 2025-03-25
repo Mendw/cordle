@@ -122,6 +122,8 @@ int main(int argc, char *argv[]) {
     }
     
     WordList_t *word_list = load_word_list(file_ptr);
+    fclose(file_ptr);
+
     if (word_list == NULL) {
         printf("Unable to parse file");
         return 3;
