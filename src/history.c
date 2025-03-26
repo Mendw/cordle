@@ -32,7 +32,7 @@ void insert_saved_game(SavedGame_t **saved_games_ptr, SavedGame_t *saved_game) {
 }
 
 SavedGame_t *load_saved_games() {
-    FILE *file_ptr = fopen(HISTORY_FILENAME, "a+");
+    FILE *file_ptr = fopen(HISTORY_FILENAME, "r");
     if (file_ptr == NULL) { return NULL; }
 
     fseek(file_ptr, 0, SEEK_SET);
@@ -99,4 +99,38 @@ void free_saved_game(SavedGame_t *saved_game) {
     free_saved_game(saved_game->next);
     free_wordle_game(saved_game->wordle_game);
     free(saved_game);
+}
+
+void delete_saved_game(SavedGame_t **saved_games_ptr, SavedGame_t **selected_game_ptr) {
+    FILE *file_ptr = fopen(HISTORY_FILENAME, "w");
+    SavedGame_t *selected_game = *selected_game_ptr;
+
+    if (selected_game->next == selected_game) { 
+        *selected_game_ptr = NULL;
+        *saved_games_ptr = NULL;
+
+        free_saved_game(selected_game);
+        fclose(file_ptr);
+        return;
+    }
+    
+    if (*saved_games_ptr == selected_game) {
+        *saved_games_ptr = selected_game->next;
+    }
+    
+    (*selected_game_ptr)->next->prev = selected_game->prev;
+    (*selected_game_ptr)->prev->next = selected_game->next;
+    *selected_game_ptr = selected_game->next;
+
+    selected_game->prev = selected_game;
+    selected_game->next = selected_game;
+    free_saved_game(selected_game);
+    
+    SavedGame_t *saved_game = *saved_games_ptr;
+    do {
+        save_game(saved_game->word, saved_game->wordle_game);
+        saved_game = saved_game->next;
+    } while (saved_game != *saved_games_ptr);
+    
+    fclose(file_ptr);
 }

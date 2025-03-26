@@ -176,7 +176,7 @@ void run_game(WordList_t *word_list, Trie_t *word_list_trie) {
     free_wordle_game(wordle_game);
 }
 
-void show_history_item(SavedGame_t *saved_game) {
+void show_history_item(SavedGame_t *saved_game, bool delete_intent) {
     erase();
     Wordle_t *wordle_game = saved_game->wordle_game;
 
@@ -191,7 +191,12 @@ void show_history_item(SavedGame_t *saved_game) {
     show_wordle_state(wordle_game);
 
     for (int line_index = wordle_game->max_attempts - wordle_game->attempts_made; line_index > 0; line_index--) addch('\n');
-    printw("\narrows to move, 'q' to quit\n");
+
+    if (delete_intent) {
+        printw("\narrows to move, 'q' to quit, 'x' again to confirm\n");
+    } else {
+        printw("\narrows to move, 'q' to quit, 'x' to delete\n");
+    }
     refresh();
 }
 
@@ -204,16 +209,28 @@ void show_history() {
     
     SavedGame_t *selected_game = saved_games;
     bool exit = false;
-    while (!exit) {
-        show_history_item(selected_game);
+    bool delete_intent = false;
+    while (!exit && selected_game != NULL) {
+        show_history_item(selected_game, delete_intent);
         switch (getch()) {
             case KEY_LEFT:
             case 'a': case 'A':
                 selected_game = selected_game->prev;
+                delete_intent = false;
                 break;
             case KEY_RIGHT:
             case 'd': case 'D':
                 selected_game = selected_game->next;
+                delete_intent = false;
+                break;
+            case 'x': case 'X':
+                if (delete_intent) {
+                    delete_saved_game(&saved_games, &selected_game);
+                    delete_intent = false;
+                    break;
+                }
+
+                delete_intent = true;
                 break;
             case 'q': case 'Q':
                 exit = true;

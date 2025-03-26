@@ -20,5 +20,6 @@ typedef struct SavedGame {
 SavedGame_t *load_saved_games();
 void save_game(char *, Wordle_t *);
 void free_saved_game(SavedGame_t *saved_game);
+void delete_saved_game(SavedGame_t **, SavedGame_t **);
 
 #endif
