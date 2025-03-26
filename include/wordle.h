@@ -12,7 +12,9 @@
 #define MISPLACED_PAIR 2
 #define CORRECT_PAIR 3
 
-typedef enum LetterState { NONE, INCORRECT, MISPLACED, CORRECT } LetterState_e;
+typedef enum LetterState { 
+    NONE, INCORRECT, MISPLACED, CORRECT 
+} LetterState_e;
 
 
 typedef struct Attempt {

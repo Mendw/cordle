@@ -1,46 +1,5 @@
 #include "../include/main.h"
 
-void init_curses() {
-    start_color();
-    keypad(stdscr, TRUE);
-
-    init_pair(INCORRECT_PAIR, COLOR_BLACK, COLOR_WHITE);
-    init_pair(MISPLACED_PAIR, COLOR_BLACK, COLOR_YELLOW);
-    init_pair(CORRECT_PAIR, COLOR_BLACK, COLOR_GREEN);
-}
-
-void set_output_color(char f) {
-    switch (f) {
-    case INCORRECT:
-        attron(COLOR_PAIR(INCORRECT));
-        break;
-    case MISPLACED:
-        attron(COLOR_PAIR(MISPLACED));
-        break;
-    case CORRECT:
-        attron(COLOR_PAIR(CORRECT));
-        break;
-    default:
-        break;
-    }
-}
-
-void reset_output_color(char f) {
-    switch (f) {
-    case INCORRECT:
-        attroff(COLOR_PAIR(INCORRECT));
-        break;
-    case MISPLACED:
-        attroff(COLOR_PAIR(MISPLACED));
-        break;
-    case CORRECT:
-        attroff(COLOR_PAIR(CORRECT));
-        break;
-    default:
-        break;
-    }
-}
-
 void display_attempt(Attempt_t *attempt) {
     for (int index = 0; index < WORDLE_SIZE; index++) {
         LetterState_e f = attempt->feedback[index];
@@ -145,9 +104,7 @@ void handle_game_lost(char *word, Wordle_t *wordle_game) {
     printw("Game lost, word was %s\n", word);
 }
 
-void run_game(WordList_t *word_list, Trie_t *word_list_trie) {
-    char *word = pick_random_word(word_list);
-    
+Wordle_t * run_game(char *word, Trie_t *word_list_trie) {    
     bool word_found; echo();
     Wordle_t *wordle_game = run_wordle(word, word_list_trie, MAX_ATTEMPTS, &word_found);
     
@@ -158,22 +115,8 @@ void run_game(WordList_t *word_list, Trie_t *word_list_trie) {
     if (word_found) handle_game_won (word, wordle_game);
     else            handle_game_lost(word, wordle_game);
 
-    printw("Save game? [y][N] > ");
-    char input[2];
-    getnstr(input, 1);
-
-    switch (input[0]) {
-    case 'y':
-    case 'Y':
-        save_game(word, wordle_game);
-        break;
-    
-    default:
-        break;
-    }
-
-    free(word);
-    free_wordle_game(wordle_game);
+    refresh();
+    return wordle_game;
 }
 
 void show_history_item(SavedGame_t *saved_game, bool delete_intent) {
@@ -241,7 +184,33 @@ void show_history() {
     free_saved_game(selected_game);
 }
 
-enum MenuOption { PLAY_GAME, GAME_HISTORY, QUIT_GAME };
+char *create_challenge(Trie_t *word_list_trie) {
+    char *word = malloc(sizeof(char) * (WORDLE_SIZE + 1));
+    bool first_attempt = true;
+
+    do {
+        erase();
+        printw("Creating challenge\n");
+        printw("Input a %d letter word\n", WORDLE_SIZE);
+        printw(".exit to cancel\n", WORDLE_SIZE);
+        if (!first_attempt) printw("invalid word\n");
+    
+        printw("> ");
+        refresh(); getscrtnstr(word, WORDLE_SIZE);
+        if (strcmp(word, ".exit") == 0) {
+            free(word);
+            return NULL;
+        }
+
+        first_attempt = false;
+    } while (!search_trie(word_list_trie, word));
+
+    return word;
+}
+
+typedef enum MenuOption { 
+    PLAY_GAME, CHALLENGE, GAME_HISTORY, QUIT_GAME 
+} MenuOption_e;
 
 void print_menu(char selected) {
     erase();
@@ -249,6 +218,7 @@ void print_menu(char selected) {
     printw("| --------------------- |\n");
     printw("|         MENU          |\n");
     printw("| [%c] Play game         |\n", selected == PLAY_GAME ? '>' : ' ');
+    printw("| [%c] Challenge         |\n", selected == CHALLENGE ? '>' : ' ');
     printw("| [%c] Game history      |\n", selected == GAME_HISTORY ? '>' : ' ');
     printw("|                       |\n");
     printw("| [%c] Quit              |\n", selected == QUIT_GAME ? '>' : ' ');
@@ -257,10 +227,52 @@ void print_menu(char selected) {
     refresh();
 }
 
-bool select_menu_option(char selected, WordList_t *word_list, Trie_t *word_list_trie) {
+void prompt_save(char *word, Wordle_t *wordle_game) {
+    printw("Save game? [y][N] > ");
+    char input[2];
+    getnstr(input, 1);
+
+    switch (input[0]) {
+    case 'y':
+    case 'Y':
+        save_game(word, wordle_game);
+        break;
+    
+    default:
+        break;
+    }
+}
+
+void prompt_continue() {
+    printw("Press any key to continue...\n");
+    getch();
+}
+
+bool select_menu_option(MenuOption_e selected, WordList_t *word_list, Trie_t *word_list_trie) {
+    Wordle_t *wordle_game;
+    char *word;
+
     switch (selected) {
         case PLAY_GAME:
-            run_game(word_list, word_list_trie);
+            word = pick_random_word(word_list);
+
+            wordle_game = run_game(word, word_list_trie);
+            prompt_save(word, wordle_game);
+
+            free_wordle_game(wordle_game);
+            free(word);
+
+            break;
+        case CHALLENGE:
+            word = create_challenge(word_list_trie);
+            if (word == NULL) break;
+
+            wordle_game = run_game(word, word_list_trie);
+            prompt_continue();
+
+            free_wordle_game(wordle_game);
+            free(word);
+
             break;
         case GAME_HISTORY:
             show_history();
@@ -278,8 +290,8 @@ void show_menu(WordList_t *word_list, Trie_t *word_list_trie) {
     curs_set(0);
     noecho();
     
-    char n_options = 3; 
-    char selected = PLAY_GAME;
+    char n_options = 4; 
+    MenuOption_e selected = PLAY_GAME;
     
     while (true) {
         print_menu(selected);

@@ -8,5 +8,6 @@
 #include "trie.h"
 #include "wordle.h"
 #include "history.h"
+#include "utilities.h"
 
 #define MAX_ATTEMPTS 10
