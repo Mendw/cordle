@@ -27,20 +27,22 @@ void insert_wordlist_node(WordList_t **wordlist_ptr, WordList_t *node) {
     wordlist->next = node;
 }
 
-WordList_t *load_word_list(FILE *file) {
+WordList_t *load_word_list() {
+    FILE *file_ptr = fopen(WORDLIST_FILENAME, "r");
+    if (file_ptr == NULL) { return NULL; }
+
     char buffer[BUFFER_SIZE + 1];
 
     WordList_t *wordlist = NULL;
-    while (fgets(buffer, BUFFER_SIZE, file) != NULL) {
+    while (fgets(buffer, BUFFER_SIZE, file_ptr) != NULL) {
         int newline_index = strcspn(buffer, "\r\n"); 
         buffer[newline_index] = '\0';
 
         WordList_t *node = create_wordlist_node(buffer);
-
         insert_wordlist_node(&wordlist, node);
     }
 
-    if (!feof(file)) { return NULL; }
+    fclose(file_ptr);
     return wordlist;
 }
 

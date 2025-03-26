@@ -2,8 +2,8 @@
 #define WORDLE_H
 
 #include <stdbool.h>
-#include <ncurses.h>
 #include <string.h>
+
 #include "trie.h"
 
 #define WORDLE_SIZE 5
@@ -12,10 +12,12 @@
 #define MISPLACED_PAIR 2
 #define CORRECT_PAIR 3
 
+typedef enum LetterState { NONE, INCORRECT, MISPLACED, CORRECT } LetterState_e;
+
+
 typedef struct Attempt {
     char *guess;
-    char *feedback;
-
+    LetterState_e *feedback;
     struct Attempt *next;
 } Attempt_t;
 
@@ -27,7 +29,10 @@ typedef struct Wordle {
     int attempts_made;
 } Wordle_t;
 
-Wordle_t *run_wordle(char*, Trie_t*, int, bool*);
-void show_wordle_state(Wordle_t *);
+Wordle_t *create_wordle_game(int);
+LetterState_e *get_feedback(Wordle_t *, char *, char *);
+void insert_attempt(Wordle_t *, char *, LetterState_e *);
+bool search_attempts(Attempt_t *, char *);
+void free_wordle_game(Wordle_t *);
 
 #endif
