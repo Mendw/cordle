@@ -1,5 +1,38 @@
 #include "../include/main.h"
 
+typedef enum MenuOption { 
+    PLAY_GAME, CHALLENGE, GAME_HISTORY, QUIT_GAME 
+} MenuOption_e;
+
+void print_menu(MenuOption_e selected) {
+    erase();
+
+    printw("| --------------------- |\n");
+    printw("|         MENU          |\n");
+    printw("| [%c] Play game         |\n", selected == PLAY_GAME ? '>' : ' ');
+    printw("| [%c] Challenge         |\n", selected == CHALLENGE ? '>' : ' ');
+    printw("| [%c] Game history      |\n", selected == GAME_HISTORY ? '>' : ' ');
+    printw("|                       |\n");
+    printw("| [%c] Quit              |\n", selected == QUIT_GAME ? '>' : ' ');
+    printw("| --------------------- |\n");
+
+    refresh();
+}
+
+void show_letters(char *prefixes) {
+    char first_prefix = 'a';
+    for (int index = 0; index < PREFIX_COUNT; index++) {
+        char f = prefixes[index];
+
+        set_output_color(f);
+        addch(first_prefix + index);
+        reset_output_color(f);
+        addch(' ');
+    }
+
+    addch('\n');
+}
+
 void display_attempt(Attempt_t *attempt) {
     for (int index = 0; index < WORDLE_SIZE; index++) {
         LetterState_e f = attempt->feedback[index];
@@ -22,20 +55,6 @@ void show_attempts(Attempt_t *attempts) {
         display_attempt(attempts);
         attempts = attempts->next;
     }
-} 
-
-void show_letters(char *prefixes) {
-    char first_prefix = 'a';
-    for (int index = 0; index < PREFIX_COUNT; index++) {
-        char f = prefixes[index];
-
-        set_output_color(f);
-        addch(first_prefix + index);
-        reset_output_color(f);
-        addch(' ');
-    }
-
-    addch('\n');
 }
 
 void show_wordle_state(Wordle_t *wordle_game) {
@@ -133,7 +152,8 @@ void show_history_item(SavedGame_t *saved_game, bool delete_intent) {
     
     show_wordle_state(wordle_game);
 
-    for (int line_index = wordle_game->max_attempts - wordle_game->attempts_made; line_index > 0; line_index--) addch('\n');
+    int line_index = wordle_game->max_attempts - MAX(1, wordle_game->attempts_made);
+    for (; line_index > 0; line_index--) addch('\n');
 
     if (delete_intent) {
         printw("\narrows to move, 'q' to quit, 'x' again to confirm\n");
@@ -190,12 +210,17 @@ char *create_challenge(Trie_t *word_list_trie) {
 
     do {
         erase();
-        printw("Creating challenge\n");
-        printw("Input a %d letter word\n", WORDLE_SIZE);
-        printw(".exit to cancel\n", WORDLE_SIZE);
-        if (!first_attempt) printw("invalid word\n");
-    
-        printw("> ");
+        printw("Creating challenge -\n");
+        printw("Input a %d letter word\n\n", WORDLE_SIZE);
+        if (!first_attempt) { 
+            printw("invalid word");
+        }
+
+        addch('\n');
+        printw("> \n\n");
+        printw(".exit to cancel\n");
+        move(4, 2);
+
         refresh(); getscrtnstr(word, WORDLE_SIZE);
         if (strcmp(word, ".exit") == 0) {
             free(word);
@@ -206,25 +231,6 @@ char *create_challenge(Trie_t *word_list_trie) {
     } while (!search_trie(word_list_trie, word));
 
     return word;
-}
-
-typedef enum MenuOption { 
-    PLAY_GAME, CHALLENGE, GAME_HISTORY, QUIT_GAME 
-} MenuOption_e;
-
-void print_menu(char selected) {
-    erase();
-
-    printw("| --------------------- |\n");
-    printw("|         MENU          |\n");
-    printw("| [%c] Play game         |\n", selected == PLAY_GAME ? '>' : ' ');
-    printw("| [%c] Challenge         |\n", selected == CHALLENGE ? '>' : ' ');
-    printw("| [%c] Game history      |\n", selected == GAME_HISTORY ? '>' : ' ');
-    printw("|                       |\n");
-    printw("| [%c] Quit              |\n", selected == QUIT_GAME ? '>' : ' ');
-    printw("| --------------------- |\n");
-
-    refresh();
 }
 
 void prompt_save(char *word, Wordle_t *wordle_game) {

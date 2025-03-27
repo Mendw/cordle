@@ -11,3 +11,4 @@
 #include "utilities.h"
 
 #define MAX_ATTEMPTS 10
+#define MAX(A, B) (((A) > (B)) ? (A) : (B))

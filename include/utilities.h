@@ -5,8 +5,8 @@
 #include "wordle.h"
 
 void init_curses();
-void set_output_color(char);
-void reset_output_color(char);
+void set_output_color(LetterState_e);
+void reset_output_color(LetterState_e);
 void getscrtnstr(char *, int);
 
 #endif

@@ -9,7 +9,7 @@ void init_curses() {
     init_pair(CORRECT_PAIR, COLOR_BLACK, COLOR_GREEN);
 }
 
-void set_output_color(char f) {
+void set_output_color(LetterState_e f) {
     switch (f) {
     case INCORRECT:
         attron(COLOR_PAIR(INCORRECT));
@@ -25,7 +25,7 @@ void set_output_color(char f) {
     }
 }
 
-void reset_output_color(char f) {
+void reset_output_color(LetterState_e f) {
     switch (f) {
     case INCORRECT:
         attroff(COLOR_PAIR(INCORRECT));
